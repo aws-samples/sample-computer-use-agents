@@ -2,7 +2,7 @@
 
 Agents that operate software built for humans, i.e., browsers, desktops, and applications, by combining LLM reasoning with visual understanding and simulated input. The agent acts as a proxy that performs actions the way a person would.
 
-This sample is the **hands-on** counterpart to the blog post [Agents That Use Computers: Browsers, Desktops, and the GUI Frontier](Agents%20That%20Use%20Computers%20-%20Browsers%2C%20Desktops%2C%20and%20the%20GUI%20Frontier.md). This sample drives real browsers and desktops with the [Strands Agents SDK](https://strandsagents.com/) and its [community tools](https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/), and is based off of the [AWS Prescriptive Guidance - Computer-use agents pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-patterns/computer-use-agents.html).
+This sample drives real browsers and desktops with the [Strands Agents SDK](https://strandsagents.com/) and its [community tools](https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/), and is based off of the [AWS Prescriptive Guidance - Computer-use agents pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-patterns/computer-use-agents.html).
 
 ## Table of Contents
 
