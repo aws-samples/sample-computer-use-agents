@@ -1,0 +1,25 @@
+# Computer-Use Agents - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Strands Agents SDK - AI agent framework
+# https://pypi.org/project/strands-agents/
+strands-agents==1.50.2
+
+# Loads the repo-root .env (AWS_PROFILE, AWS_REGION, STRANDS_MODEL_*) in shared/model.py
+# https://pypi.org/project/python-dotenv/
+python-dotenv==1.2.4
+
+# Local browser automation (Playwright)
+# https://pypi.org/project/strands-agents-tools/
+strands-agents-tools[local_chromium_browser]==0.8.5
+playwright==1.62.0
+
+# Desktop automation (requires Tesseract OCR installed separately)
+# macOS: brew install tesseract
+# Linux: sudo apt-get install tesseract-ocr
+strands-agents-tools[use_computer]==0.8.5
+
+# AgentCore Browser (managed browser in AWS)
+# https://pypi.org/project/bedrock-agentcore/
+bedrock-agentcore==1.21.0
+nest-asyncio==1.6.0
