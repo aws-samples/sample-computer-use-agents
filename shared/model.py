@@ -43,59 +43,29 @@ def get_region() -> str:
         return os.environ.get("AWS_REGION", DEFAULT_REGION)
 
 
-def get_profile() -> str:
-    """Return the AWS profile name boto3 will actually use.
-
-    botocore reads ``AWS_DEFAULT_PROFILE`` before ``AWS_PROFILE``, so a stale
-    ``AWS_DEFAULT_PROFILE`` in the shell silently beats the ``AWS_PROFILE`` a
-    user put in ``.env``. This returns whatever botocore resolved.
-    """
-    try:
-        import botocore.session
-
-        return botocore.session.get_session().get_config_variable("profile") or "default"
-    except Exception:
-        return os.environ.get("AWS_DEFAULT_PROFILE") or os.environ.get("AWS_PROFILE") or "default"
-
-
 _target_reported = False
 
 
 def report_aws_target(model_id: str | None = None) -> None:
-    """Print, once per process, which AWS account every call in this run goes to.
+    """Print, once per process, the region and model this run will use.
 
-    One STS call. Shown before any agent output so a reader can confirm the
-    profile, region and account before the first Bedrock request is billed,
-    and so "which model was I on?" is never a guess. Also warns when a shell
-    variable overrode a value set in ``.env``, since that is the one case
-    where the file a user just edited is not what takes effect.
+    Shown before any agent output so "which model was I on?" is never a
+    guess and a region mismatch is visible before the first Bedrock call.
+    Also warns when the shell's ``AWS_REGION`` overrode the value in ``.env``,
+    the one case where the file a user just edited is not what takes effect.
     """
     global _target_reported
     if _target_reported:
         return
     _target_reported = True
 
-    profile = get_profile()
     region = get_region()
-    try:
-        import boto3
-
-        account = boto3.client("sts", region_name=region).get_caller_identity()["Account"]
-    except Exception as exc:  # no credentials, expired SSO, no network, ...
-        code = getattr(exc, "response", {}).get("Error", {}).get("Code") or type(exc).__name__
-        account = f"unavailable ({code}; run `aws sts get-caller-identity --profile {profile}`)"
-
-    line = f"[aws] profile={profile}  region={region}  account={account}"
+    line = f"[aws] region={region}"
     if model_id:
         line += f"  model={model_id}"
     print(line)
 
     wanted = dotenv_values(ENV_PATH) if ENV_PATH.exists() else {}
-    if wanted.get("AWS_PROFILE") and wanted["AWS_PROFILE"] != profile:
-        print(
-            f"[aws] note: .env sets AWS_PROFILE={wanted['AWS_PROFILE']} but the shell's "
-            f"AWS_PROFILE/AWS_DEFAULT_PROFILE won. Unset it to use the .env value."
-        )
     if wanted.get("AWS_REGION") and wanted["AWS_REGION"] != region:
         print(
             f"[aws] note: .env sets AWS_REGION={wanted['AWS_REGION']} but the shell's "
