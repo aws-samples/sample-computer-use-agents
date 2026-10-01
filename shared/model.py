@@ -2,13 +2,15 @@ import functools
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from strands.models import BedrockModel
 
 # Load the repo-root .env (copied from .env.example) so AWS_PROFILE, AWS_REGION
 # and STRANDS_MODEL_* are set once for every lab. Variables already exported in
-# the shell win; the file only fills in what is missing.
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+# the shell win; the file only fills in what is missing. report_aws_target()
+# prints the result and warns when the shell overrode the file.
+ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(ENV_PATH)
 
 # Known-good active model. Used when auto mode is off or discovery fails.
 FALLBACK_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
@@ -39,6 +41,66 @@ def get_region() -> str:
         )
     except Exception:
         return os.environ.get("AWS_REGION", DEFAULT_REGION)
+
+
+def get_profile() -> str:
+    """Return the AWS profile name boto3 will actually use.
+
+    botocore reads ``AWS_DEFAULT_PROFILE`` before ``AWS_PROFILE``, so a stale
+    ``AWS_DEFAULT_PROFILE`` in the shell silently beats the ``AWS_PROFILE`` a
+    user put in ``.env``. This returns whatever botocore resolved.
+    """
+    try:
+        import botocore.session
+
+        return botocore.session.get_session().get_config_variable("profile") or "default"
+    except Exception:
+        return os.environ.get("AWS_DEFAULT_PROFILE") or os.environ.get("AWS_PROFILE") or "default"
+
+
+_target_reported = False
+
+
+def report_aws_target(model_id: str | None = None) -> None:
+    """Print, once per process, which AWS account every call in this run goes to.
+
+    One STS call. Shown before any agent output so a reader can confirm the
+    profile, region and account before the first Bedrock request is billed,
+    and so "which model was I on?" is never a guess. Also warns when a shell
+    variable overrode a value set in ``.env``, since that is the one case
+    where the file a user just edited is not what takes effect.
+    """
+    global _target_reported
+    if _target_reported:
+        return
+    _target_reported = True
+
+    profile = get_profile()
+    region = get_region()
+    try:
+        import boto3
+
+        account = boto3.client("sts", region_name=region).get_caller_identity()["Account"]
+    except Exception as exc:  # no credentials, expired SSO, no network, ...
+        code = getattr(exc, "response", {}).get("Error", {}).get("Code") or type(exc).__name__
+        account = f"unavailable ({code}; run `aws sts get-caller-identity --profile {profile}`)"
+
+    line = f"[aws] profile={profile}  region={region}  account={account}"
+    if model_id:
+        line += f"  model={model_id}"
+    print(line)
+
+    wanted = dotenv_values(ENV_PATH) if ENV_PATH.exists() else {}
+    if wanted.get("AWS_PROFILE") and wanted["AWS_PROFILE"] != profile:
+        print(
+            f"[aws] note: .env sets AWS_PROFILE={wanted['AWS_PROFILE']} but the shell's "
+            f"AWS_PROFILE/AWS_DEFAULT_PROFILE won. Unset it to use the .env value."
+        )
+    if wanted.get("AWS_REGION") and wanted["AWS_REGION"] != region:
+        print(
+            f"[aws] note: .env sets AWS_REGION={wanted['AWS_REGION']} but the shell's "
+            f"AWS_REGION won. Unset it to use the .env value."
+        )
 
 
 @functools.lru_cache(maxsize=1)
@@ -117,6 +179,14 @@ def get_model(**kwargs) -> BedrockModel:
 
     Any keyword arguments (``temperature``, ``max_tokens``, ``region_name``,
     or an explicit ``model_id`` override) are passed through to BedrockModel.
+
+    ``region_name`` defaults to :func:`get_region`. BedrockModel on its own
+    prefers the profile's configured region over ``AWS_REGION``, so without
+    this the model discovery (which uses get_region) and the actual Bedrock
+    calls could land in two different regions.
     """
     kwargs.setdefault("model_id", resolve_model_id())
+    if "boto_session" not in kwargs:
+        kwargs.setdefault("region_name", get_region())
+    report_aws_target(kwargs["model_id"])
     return BedrockModel(**kwargs)
