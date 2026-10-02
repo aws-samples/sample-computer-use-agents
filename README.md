@@ -2,7 +2,7 @@
 
 Agents that operate software built for humans, i.e., browsers, desktops, and applications, by combining LLM reasoning with visual understanding and simulated input. The agent acts as a proxy that performs actions the way a person would.
 
-This sample drives real browsers and desktops with the [Strands Agents SDK](https://strandsagents.com/) and its [community tools](https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/), and is based off of the [AWS Prescriptive Guidance - Computer-use agents pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-patterns/computer-use-agents.html).
+This sample drives real browsers and desktops with the [Strands Agents SDK](https://strandsagents.com/) and its [community tools](https://strandsagents.com/docs/user-guide/sdk/tools/community-tools-package/), and is based off of the [AWS Prescriptive Guidance - Computer-use agents pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-patterns/computer-use-agents.html).
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ This sample drives real browsers and desktops with the [Strands Agents SDK](http
 - AWS credentials configured (`aws configure`) with permission to invoke models on Bedrock
 - **Local browser agent**: `playwright install chromium` (downloads the browser binary)
 - **Desktop agent**: [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) (`brew install tesseract` / `apt-get install tesseract-ocr`) and OS screen-recording permission
-- **Managed browser agent**: IAM permissions for `bedrock-agentcore:*Browser*` ([onboarding guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-onboarding.html))
+- **Managed browser agent**: IAM permissions for `bedrock-agentcore:*Browser*` ([AgentCore Browser guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-tool.html))
 
 ```bash
 # Create and activate virtual environment
@@ -133,7 +133,7 @@ agent = Agent(system_prompt="...", tools=[browser_tool.browser], callback_handle
 | Observability | Local window | Live view + session recording |
 | Best for | Development, local testing | Enterprise workflows, audit, scale |
 
-Requires AgentCore Browser IAM permissions — see the [browser onboarding guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-onboarding.html).
+Requires AgentCore Browser IAM permissions — see the [AgentCore Browser guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-tool.html).
 
 ---
 
@@ -167,8 +167,8 @@ Requires Tesseract OCR installed and, on macOS, screen-recording permission (Sys
 
 - [Companion blog post: Agents That Use Computers](Agents%20That%20Use%20Computers%20-%20Browsers%2C%20Desktops%2C%20and%20the%20GUI%20Frontier.md)
 - [AWS Prescriptive Guidance - Computer-use agents](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-patterns/computer-use-agents.html)
-- [Strands community tools package](https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/)
-- [Amazon Bedrock AgentCore Browser onboarding](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-onboarding.html)
+- [Strands community tools package](https://strandsagents.com/docs/user-guide/sdk/tools/community-tools-package/)
+- [Amazon Bedrock AgentCore Browser](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-tool.html)
 - [Amazon Bedrock User Guide](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html)
 
 ### The series
